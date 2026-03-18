@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { ActivitiesGateway } from '../activities/activities.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 import { DRIZZLE } from '../../db/drizzle';
 import { createMockDb } from '../../test/mock-db';
 
@@ -16,7 +17,8 @@ describe('ProjectsService', () => {
       providers: [
         ProjectsService,
         { provide: DRIZZLE, useValue: db },
-        { provide: ActivitiesGateway, useValue: { emitProjectUpdate: jest.fn() } },
+        { provide: ActivitiesGateway, useValue: { emitProjectUpdate: jest.fn(), emitNotification: jest.fn() } },
+        { provide: NotificationsService, useValue: { create: jest.fn().mockResolvedValue({ id: 'n1' }) } },
       ],
     }).compile();
 

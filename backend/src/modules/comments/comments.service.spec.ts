@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommentsService } from './comments.service';
 import { ActivitiesGateway } from '../activities/activities.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 import { DRIZZLE } from '../../db/drizzle';
 import { createMockDb } from '../../test/mock-db';
 
@@ -15,7 +16,8 @@ describe('CommentsService', () => {
       providers: [
         CommentsService,
         { provide: DRIZZLE, useValue: db },
-        { provide: ActivitiesGateway, useValue: { emitNewComment: jest.fn() } },
+        { provide: ActivitiesGateway, useValue: { emitNewComment: jest.fn(), emitNotification: jest.fn() } },
+        { provide: NotificationsService, useValue: { create: jest.fn().mockResolvedValue({ id: 'n1' }) } },
       ],
     }).compile();
 
@@ -36,23 +38,26 @@ describe('CommentsService', () => {
   });
 
   describe('create', () => {
-    it('should create comment, activity event, and return enriched comment', async () => {
+    it('should create comment, notify client, and return enriched comment', async () => {
       const comment = { id: 'c1', activityId: 'a1', userId: 'u1', message: 'Hello' };
       const activity = { id: 'a1', projectId: 'p1' };
+      const project = { clientId: 'client1', name: 'Test Project' };
+      const author = { name: 'Jean' };
       const enriched = { ...comment, userName: 'Jean', createdAt: new Date() };
 
       db._chain.returning.mockResolvedValueOnce([comment]);
       db._chain.where.mockResolvedValueOnce([activity]);
-      db._chain.returning.mockResolvedValueOnce([]);
+      db._chain.where.mockResolvedValueOnce([project]);
+      db._chain.where.mockResolvedValueOnce([author]);
       db._chain.where.mockResolvedValueOnce([enriched]);
 
       const result = await service.create('a1', 'Hello', 'u1');
 
       expect(result).toEqual(enriched);
-      expect(db.insert).toHaveBeenCalledTimes(2);
+      expect(db.insert).toHaveBeenCalledTimes(1);
     });
 
-    it('should skip activity creation when original activity not found', async () => {
+    it('should skip notification when original activity not found', async () => {
       const comment = { id: 'c1', activityId: 'a1', userId: 'u1', message: 'Hello' };
       const enriched = { ...comment, userName: 'Jean', createdAt: new Date() };
 
