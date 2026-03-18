@@ -141,6 +141,39 @@ export const comments = pgTable('comments', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const activityAttachments = pgTable('activity_attachments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  activityId: uuid('activity_id')
+    .notNull()
+    .references(() => activities.id, { onDelete: 'cascade' }),
+  filename: text('filename').notNull(),
+  originalName: text('original_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const appointments = pgTable(
+  'appointments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    description: text('description'),
+    startDate: timestamp('start_date').notNull(),
+    endDate: timestamp('end_date').notNull(),
+    allDay: boolean('all_day').notNull().default(false),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    clientId: text('client_id')
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (t) => [
+    index('appointments_user_id_idx').on(t.userId),
+    index('appointments_client_id_idx').on(t.clientId),
+  ],
+);
+
 export const notifications = pgTable(
   'notifications',
   {
@@ -207,4 +240,9 @@ export const commentRelations = relations(comments, ({ one }) => ({
 export const notificationRelations = relations(notifications, ({ one }) => ({
   user: one(user, { fields: [notifications.userId], references: [user.id] }),
   project: one(projects, { fields: [notifications.projectId], references: [projects.id] }),
+}));
+
+export const appointmentRelations = relations(appointments, ({ one }) => ({
+  user: one(user, { fields: [appointments.userId], references: [user.id], relationName: 'proAppointments' }),
+  client: one(user, { fields: [appointments.clientId], references: [user.id], relationName: 'clientAppointments' }),
 }));

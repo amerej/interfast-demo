@@ -86,6 +86,7 @@ export interface Appointment {
   endDate: string;
   allDay: boolean;
   userId: string;
+  clientId: string | null;
   createdAt: string | null;
 }
 

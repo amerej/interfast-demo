@@ -128,4 +128,8 @@ export class ActivitiesGateway {
   emitNotification(userId: string, notification: NotificationPayload) {
     this.server.to(`user:${userId}`).emit('notification', notification);
   }
+
+  emitAppointmentUpdate(clientId: string) {
+    this.server.to(`client:${clientId}`).emit('appointmentUpdate');
+  }
 }

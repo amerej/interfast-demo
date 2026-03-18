@@ -10,6 +10,7 @@ import ProAuthPage from './features/pro/ProAuthPage';
 import ProProjectsPage from './features/pro/ProProjectsPage';
 import ProProjectDashboard from './features/pro/ProProjectDashboard';
 import ProClientsPage from './features/pro/ProClientsPage';
+import AgendaPage from './features/agenda/AgendaPage';
 
 function Spinner() {
   return (
@@ -114,6 +115,26 @@ export default function App() {
               <ProClientsPage />
             </ProLayout>
           </ProProtectedRoute>
+        }
+      />
+      <Route
+        path="/pro/agenda"
+        element={
+          <ProProtectedRoute>
+            <ProLayout>
+              <AgendaPage />
+            </ProLayout>
+          </ProProtectedRoute>
+        }
+      />
+      <Route
+        path="/agenda"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AgendaPage />
+            </Layout>
+          </ProtectedRoute>
         }
       />
     </Routes>

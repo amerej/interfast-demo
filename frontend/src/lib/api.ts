@@ -3,6 +3,9 @@ import type {
   Task,
   Activity,
   Comment,
+  Attachment,
+  Appointment,
+  Notification,
   UserProfile,
   Client,
   Trade,
@@ -68,4 +71,27 @@ export const api = {
     request<Client>('/pro/clients', { method: 'POST', body: JSON.stringify(data) }),
   deleteClient: (clientId: string) =>
     request<DeleteResponse>(`/pro/clients/${clientId}`, { method: 'DELETE' }),
+
+  getActivityAttachments: (activityId: string) =>
+    request<Attachment[]>(`/activities/${activityId}/attachments`),
+  uploadAttachments: (activityId: string, files: FileList) => {
+    const form = new FormData();
+    Array.from(files).forEach((f) => form.append('files', f));
+    return request<Attachment[]>(`/activities/${activityId}/attachments`, { method: 'POST', body: form });
+  },
+  deleteAttachment: (id: string) => request<DeleteResponse>(`/attachments/${id}`, { method: 'DELETE' }),
+
+  getNotifications: () => request<Notification[]>('/notifications'),
+  markNotificationRead: (id: string) =>
+    request<Notification>(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () =>
+    request<{ updated: number }>('/notifications/read-all', { method: 'PATCH' }),
+
+  getAppointments: () => request<Appointment[]>('/appointments'),
+  createAppointment: (data: { title: string; description?: string; startDate: string; endDate: string; allDay?: boolean; clientId: string }) =>
+    request<Appointment>('/appointments', { method: 'POST', body: JSON.stringify(data) }),
+  updateAppointment: (id: string, data: { title?: string; description?: string; startDate?: string; endDate?: string; allDay?: boolean }) =>
+    request<Appointment>(`/appointments/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAppointment: (id: string) =>
+    request<DeleteResponse>(`/appointments/${id}`, { method: 'DELETE' }),
 };
