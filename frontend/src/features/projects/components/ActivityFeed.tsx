@@ -5,7 +5,6 @@ import { useTypedSession } from "../../../lib/auth-client";
 import { getSocket } from "../../../lib/socket";
 import type { Attachment } from "../../../lib/types";
 import CommentSection from "./CommentSection";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -148,7 +147,7 @@ export default function ActivityFeed({ projectId }: { projectId: string }) {
           ))}
         </div>
       ) : (
-        <ScrollArea className="max-h-[380px]">
+        <div className="max-h-[380px] overflow-y-auto">
           <div className="space-y-0.5 pr-3">
             {activities?.map((activity) => {
               const isExpanded = expandedActivity === activity.id;
@@ -184,7 +183,7 @@ export default function ActivityFeed({ projectId }: { projectId: string }) {
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       )}
 
       {!isLoading && (!activities || activities.length === 0) && (

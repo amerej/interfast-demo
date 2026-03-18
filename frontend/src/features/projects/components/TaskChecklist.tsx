@@ -4,7 +4,6 @@ import { api } from "../../../lib/api";
 import { useTypedSession } from "../../../lib/auth-client";
 import type { Task, TradeCategory } from "../../../lib/types";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -106,7 +105,7 @@ export default function TaskChecklist({ projectId }: { projectId: string }) {
           ))}
         </div>
       ) : (
-        <ScrollArea className="max-h-[380px]">
+        <div className="max-h-[380px] overflow-y-auto">
           <div className="space-y-1 pr-3">
             {sortedTasks.map((task) => (
               <div
@@ -157,7 +156,7 @@ export default function TaskChecklist({ projectId }: { projectId: string }) {
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       )}
 
       {!isLoading && (!tasks || tasks.length === 0) && (
