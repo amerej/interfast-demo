@@ -3,12 +3,14 @@ import { eq, sql, and } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../../db/drizzle';
 import { projects, tasks, user, proClients, trades } from '../../db/schema';
 import { ActivitiesGateway } from '../activities/activities.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     @Inject(forwardRef(() => ActivitiesGateway)) private readonly activitiesGateway: ActivitiesGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findByPro(proId: string) {
@@ -130,6 +132,20 @@ export class ProjectsService {
 
     this.activitiesGateway.emitProjectUpdate(data.clientId, project);
 
+    const [author] = await this.db
+      .select({ name: user.name })
+      .from(user)
+      .where(eq(user.id, proId));
+
+    const notif = await this.notificationsService.create({
+      userId: data.clientId,
+      message: `${author?.name ?? 'Votre pro'} a créé un nouveau projet "${project.name}"`,
+      projectId: project.id,
+      type: 'project',
+    });
+
+    this.activitiesGateway.emitNotification(data.clientId, notif);
+
     return project;
   }
 
@@ -163,6 +179,22 @@ export class ProjectsService {
       .returning();
 
     this.activitiesGateway.emitProjectUpdate(existing[0].clientId, updated);
+
+    if (existing[0].clientId) {
+      const [author] = await this.db
+        .select({ name: user.name })
+        .from(user)
+        .where(eq(user.id, proId));
+
+      const notif = await this.notificationsService.create({
+        userId: existing[0].clientId,
+        message: `${author?.name ?? 'Votre pro'} a modifié le projet "${updated.name}"`,
+        projectId: id,
+        type: 'project',
+      });
+
+      this.activitiesGateway.emitNotification(existing[0].clientId, notif);
+    }
 
     return updated;
   }

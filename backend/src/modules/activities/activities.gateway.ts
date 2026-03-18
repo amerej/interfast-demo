@@ -44,6 +44,16 @@ export interface ProjectPayload {
   createdAt: Date | null;
 }
 
+export interface NotificationPayload {
+  id: string;
+  userId: string;
+  type: string;
+  message: string;
+  projectId: string | null;
+  read: boolean;
+  createdAt: Date | null;
+}
+
 type DeletedPayload = { id: string; deleted: true };
 
 @WebSocketGateway({
@@ -88,6 +98,15 @@ export class ActivitiesGateway {
     client.leave(`client:${clientId}`);
   }
 
+  @SubscribeMessage('joinUser')
+  handleJoinUser(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() userId: string,
+  ) {
+    client.join(`user:${userId}`);
+    return { event: 'joinedUser', data: userId };
+  }
+
   emitNewActivity(projectId: string, activity: ActivityPayload) {
     this.server.to(`project:${projectId}`).emit('newActivity', activity);
   }
@@ -104,5 +123,9 @@ export class ActivitiesGateway {
     if (clientId) {
       this.server.to(`client:${clientId}`).emit('projectUpdate', project);
     }
+  }
+
+  emitNotification(userId: string, notification: NotificationPayload) {
+    this.server.to(`user:${userId}`).emit('notification', notification);
   }
 }

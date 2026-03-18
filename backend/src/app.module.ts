@@ -8,6 +8,7 @@ import { ActivitiesModule } from "./modules/activities/activities.module";
 import { CommentsModule } from "./modules/comments/comments.module";
 import { TradesModule } from "./modules/trades/trades.module";
 import { ProClientsModule } from "./modules/pro-clients/pro-clients.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ProClientsModule } from "./modules/pro-clients/pro-clients.module";
     CommentsModule,
     TradesModule,
     ProClientsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

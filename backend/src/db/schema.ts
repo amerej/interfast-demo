@@ -141,6 +141,25 @@ export const comments = pgTable('comments', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    type: text('type').notNull().default('activity'),
+    message: text('message').notNull(),
+    projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
+    read: boolean('read').notNull().default(false),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (t) => [
+    index('notifications_user_id_idx').on(t.userId),
+    index('notifications_user_read_idx').on(t.userId, t.read),
+  ],
+);
+
 export const tradesRelations = relations(trades, ({ many }) => ({
   categories: many(tradeCategories),
   users: many(user),
@@ -183,4 +202,9 @@ export const activityRelations = relations(activities, ({ one, many }) => ({
 export const commentRelations = relations(comments, ({ one }) => ({
   activity: one(activities, { fields: [comments.activityId], references: [activities.id] }),
   user: one(user, { fields: [comments.userId], references: [user.id] }),
+}));
+
+export const notificationRelations = relations(notifications, ({ one }) => ({
+  user: one(user, { fields: [notifications.userId], references: [user.id] }),
+  project: one(projects, { fields: [notifications.projectId], references: [projects.id] }),
 }));

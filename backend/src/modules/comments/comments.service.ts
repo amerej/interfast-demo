@@ -1,14 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, asc } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../../db/drizzle';
-import { comments, user, activities } from '../../db/schema';
+import { comments, user, activities, projects } from '../../db/schema';
 import { ActivitiesGateway } from '../activities/activities.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     private readonly activitiesGateway: ActivitiesGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findByActivity(activityId: string) {
@@ -39,11 +41,27 @@ export class CommentsService {
       .where(eq(activities.id, activityId));
 
     if (activity) {
-      await this.db.insert(activities).values({
-        projectId: activity.projectId,
-        userId,
-        message: `Nouveau commentaire ajouté`,
-      });
+      // Notify the project's client about the new comment
+      const [project] = await this.db
+        .select({ clientId: projects.clientId, name: projects.name })
+        .from(projects)
+        .where(eq(projects.id, activity.projectId));
+
+      if (project?.clientId && project.clientId !== userId) {
+        const [author] = await this.db
+          .select({ name: user.name })
+          .from(user)
+          .where(eq(user.id, userId));
+
+        const notif = await this.notificationsService.create({
+          userId: project.clientId,
+          message: `${author?.name ?? 'Quelqu\'un'} a commenté une activité sur "${project.name}"`,
+          projectId: activity.projectId,
+          type: 'comment',
+        });
+
+        this.activitiesGateway.emitNotification(project.clientId, notif);
+      }
     }
 
     const [enriched] = await this.db

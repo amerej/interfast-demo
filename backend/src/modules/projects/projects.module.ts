@@ -2,9 +2,10 @@ import { Module, forwardRef } from '@nestjs/common';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { ActivitiesModule } from '../activities/activities.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [forwardRef(() => ActivitiesModule)],
+  imports: [forwardRef(() => ActivitiesModule), NotificationsModule],
   controllers: [ProjectsController],
   providers: [ProjectsService],
   exports: [ProjectsService],

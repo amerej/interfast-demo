@@ -1,14 +1,16 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../../db/drizzle';
-import { tasks, activities } from '../../db/schema';
+import { tasks, activities, projects, user } from '../../db/schema';
 import { ActivitiesGateway } from '../activities/activities.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     private readonly activitiesGateway: ActivitiesGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findByProject(projectId: string) {
@@ -41,6 +43,28 @@ export class TasksService {
 
     this.activitiesGateway.emitTaskUpdate(data.projectId, task);
 
+    // Notify the project's client
+    const [project] = await this.db
+      .select({ clientId: projects.clientId, name: projects.name })
+      .from(projects)
+      .where(eq(projects.id, data.projectId));
+
+    if (project?.clientId) {
+      const [author] = await this.db
+        .select({ name: user.name })
+        .from(user)
+        .where(eq(user.id, userId));
+
+      const notif = await this.notificationsService.create({
+        userId: project.clientId,
+        message: `${author?.name ?? 'Votre pro'} a ajouté une tâche "${data.title}" sur "${project.name}"`,
+        projectId: data.projectId,
+        type: 'task',
+      });
+
+      this.activitiesGateway.emitNotification(project.clientId, notif);
+    }
+
     return task;
   }
 
@@ -68,6 +92,28 @@ export class TasksService {
         userId,
         message: `Tâche "${existing[0].title}" marquée comme ${statusLabel}`,
       });
+
+      // Notify the project's client
+      const [project] = await this.db
+        .select({ clientId: projects.clientId, name: projects.name })
+        .from(projects)
+        .where(eq(projects.id, existing[0].projectId));
+
+      if (project?.clientId) {
+        const [author] = await this.db
+          .select({ name: user.name })
+          .from(user)
+          .where(eq(user.id, userId));
+
+        const notif = await this.notificationsService.create({
+          userId: project.clientId,
+          message: `${author?.name ?? 'Votre pro'} a marqué la tâche "${existing[0].title}" comme ${statusLabel} sur "${project.name}"`,
+          projectId: existing[0].projectId,
+          type: 'task',
+        });
+
+        this.activitiesGateway.emitNotification(project.clientId, notif);
+      }
     }
 
     this.activitiesGateway.emitTaskUpdate(existing[0].projectId, updated);

@@ -1,14 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, desc } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from '../../db/drizzle';
-import { activities, user } from '../../db/schema';
+import { activities, user, projects } from '../../db/schema';
 import { ActivitiesGateway } from './activities.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ActivitiesService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     private readonly activitiesGateway: ActivitiesGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findByProject(projectId: string) {
@@ -43,6 +45,28 @@ export class ActivitiesService {
       .returning();
 
     this.activitiesGateway.emitNewActivity(data.projectId, activity);
+
+    // Notify the project's client
+    const [project] = await this.db
+      .select({ clientId: projects.clientId, name: projects.name })
+      .from(projects)
+      .where(eq(projects.id, data.projectId));
+
+    if (project?.clientId) {
+      const [author] = await this.db
+        .select({ name: user.name })
+        .from(user)
+        .where(eq(user.id, userId));
+
+      const notif = await this.notificationsService.create({
+        userId: project.clientId,
+        message: `${author?.name ?? 'Votre pro'} a publié une mise à jour sur "${project.name}"`,
+        projectId: data.projectId,
+        type: 'activity',
+      });
+
+      this.activitiesGateway.emitNotification(project.clientId, notif);
+    }
 
     return activity;
   }
