@@ -33,6 +33,12 @@ export const auth = betterAuth({
         defaultValue: 'client',
         input: true,
       },
+      tradeId: {
+        type: 'string',
+        required: false,
+        defaultValue: null,
+        input: true,
+      },
     },
   },
   trustedOrigins: [
