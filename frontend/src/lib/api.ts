@@ -1,3 +1,15 @@
+import type {
+  Project,
+  Task,
+  Activity,
+  Comment,
+  UserProfile,
+  Client,
+  Trade,
+  TradeCategory,
+  DeleteResponse,
+} from './types';
+
 const API_URL = import.meta.env.VITE_API_URL || '/backend';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -15,55 +27,22 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export interface Project {
-  id: string;
-  name: string;
-  status: string;
-  clientId: string;
-  startDate: string | null;
-  estimatedEndDate: string | null;
-  progress: number;
-  taskStats: { total: number; done: number };
-  createdAt: string;
-}
-
-export interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  status: string;
-  category: string | null;
-  createdAt: string;
-}
-
-export interface Activity {
-  id: string;
-  projectId: string;
-  userId: string;
-  userName: string;
-  message: string;
-  createdAt: string;
-}
-
-export interface Comment {
-  id: string;
-  activityId: string;
-  userId: string;
-  userName: string;
-  message: string;
-  createdAt: string;
-}
-
 export const api = {
   getProjects: () => request<Project[]>('/projects'),
   getProject: (id: string) => request<Project>(`/projects/${id}`),
+  createProject: (data: { name: string; clientId: string; status?: string; startDate?: string; estimatedEndDate?: string }) =>
+    request<Project>('/projects', { method: 'POST', body: JSON.stringify(data) }),
+  updateProject: (id: string, data: { name?: string; status?: string; startDate?: string; estimatedEndDate?: string }) =>
+    request<Project>(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteProject: (id: string) =>
+    request<DeleteResponse>(`/projects/${id}`, { method: 'DELETE' }),
 
   getProjectTasks: (projectId: string) => request<Task[]>(`/projects/${projectId}/tasks`),
   createTask: (data: { projectId: string; title: string; status?: string; category?: string }) =>
     request<Task>('/tasks', { method: 'POST', body: JSON.stringify(data) }),
   updateTask: (id: string, data: { title?: string; status?: string; category?: string }) =>
     request<Task>(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  deleteTask: (id: string) => request<{ deleted: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
+  deleteTask: (id: string) => request<DeleteResponse>(`/tasks/${id}`, { method: 'DELETE' }),
 
   getProjectActivities: (projectId: string) =>
     request<Activity[]>(`/projects/${projectId}/activities`),
@@ -78,5 +57,15 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
 
-  getUser: (id: string) => request<{ id: string; name: string; email: string; role: string }>(`/users/${id}`),
+  getUser: (id: string) => request<UserProfile>(`/users/${id}`),
+  updateUser: (id: string, data: { tradeId?: string }) =>
+    request<UserProfile>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  getTrades: () => request<Trade[]>('/trades'),
+  getTradeCategories: (tradeId: string) => request<TradeCategory[]>(`/trades/${tradeId}/categories`),
+
+  getProClients: () => request<Client[]>('/pro/clients'),
+  createClient: (data: { name: string; email: string }) =>
+    request<Client>('/pro/clients', { method: 'POST', body: JSON.stringify(data) }),
+  deleteClient: (clientId: string) =>
+    request<DeleteResponse>(`/pro/clients/${clientId}`, { method: 'DELETE' }),
 };
