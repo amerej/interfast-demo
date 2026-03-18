@@ -237,6 +237,10 @@ export const commentRelations = relations(comments, ({ one }) => ({
   user: one(user, { fields: [comments.userId], references: [user.id] }),
 }));
 
+export const activityAttachmentRelations = relations(activityAttachments, ({ one }) => ({
+  activity: one(activities, { fields: [activityAttachments.activityId], references: [activities.id] }),
+}));
+
 export const notificationRelations = relations(notifications, ({ one }) => ({
   user: one(user, { fields: [notifications.userId], references: [user.id] }),
   project: one(projects, { fields: [notifications.projectId], references: [projects.id] }),

@@ -16,9 +16,12 @@ import type {
 const API_URL = import.meta.env.VITE_API_URL || '/backend';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const isFormData = options?.body instanceof FormData;
   const res = await fetch(`${API_URL}${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: isFormData
+      ? { ...options?.headers }
+      : { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   });
 
