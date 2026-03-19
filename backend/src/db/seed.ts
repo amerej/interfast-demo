@@ -86,7 +86,7 @@ async function seed() {
       {
         id: proElecId,
         name: 'Pierre Martin',
-        email: 'electricien@example.com',
+        email: 'pro@example.com',
         emailVerified: true,
         role: 'pro',
         tradeId: tradeData[0].id,

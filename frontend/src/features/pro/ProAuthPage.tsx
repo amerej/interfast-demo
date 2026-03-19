@@ -107,7 +107,7 @@ export default function ProAuthPage() {
               id="pro-email"
               type="email"
               autoComplete="email"
-              placeholder="electricien@example.com"
+              placeholder="pro@example.com"
               className={inputClass}
               {...loginForm.register("email")}
             />
@@ -158,7 +158,7 @@ export default function ProAuthPage() {
         </div>
 
         <p className="mt-6 text-[11px] text-muted-foreground/50 text-center">
-          Demo: electricien@example.com / pro123
+          Demo: pro@example.com / pro123
         </p>
       </div>
     </div>
